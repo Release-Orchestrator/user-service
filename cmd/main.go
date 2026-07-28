@@ -1,0 +1,104 @@
+package main
+
+import (
+	"context"
+	"embed"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Release-Orchestrator/user-service/internal/config"
+	"github.com/Release-Orchestrator/user-service/internal/handler"
+	"github.com/Release-Orchestrator/user-service/internal/repository"
+	"github.com/Release-Orchestrator/user-service/internal/service"
+)
+
+//go:embed ../migrations/*.sql
+var migrationsFS embed.FS
+
+func main() {
+	cfg := config.Load()
+
+	dbpool, err := pgxpool.New(context.Background(), cfg.DSN())
+	if err != nil {
+		log.Fatalf("unable to connect to database: %v", err)
+	}
+	defer dbpool.Close()
+
+	if err := dbpool.Ping(context.Background()); err != nil {
+		log.Fatalf("unable to ping database: %v", err)
+	}
+	log.Println("database connected")
+
+	if err := runMigrations(dbpool); err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
+	log.Println("migrations applied")
+
+	repo := repository.NewUserRepository(dbpool)
+	svc := service.NewUserService(repo)
+	userHandler := handler.NewUserHandler(svc)
+
+	r := gin.Default()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "UP"})
+	})
+
+	api := r.Group("/api/v1")
+	userHandler.RegisterRoutes(api)
+
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: r,
+	}
+
+	go func() {
+		log.Printf("server starting on port %s", cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("server forced to shutdown:", err)
+	}
+
+	log.Println("server exited")
+}
+
+func runMigrations(db *pgxpool.Pool) error {
+	entries, err := migrationsFS.ReadDir("migrations")
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		data, err := migrationsFS.ReadFile("migrations/" + entry.Name())
+		if err != nil {
+			return err
+		}
+		if _, err := db.Exec(context.Background(), string(data)); err != nil {
+			return err
+		}
+		log.Printf("applied migration: %s", entry.Name())
+	}
+
+	return nil
+}
