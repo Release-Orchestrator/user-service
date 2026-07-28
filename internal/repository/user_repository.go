@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/release-platform/user-service/internal/model"
+	"github.com/Release-Orchestrator/user-service/internal/model"
 )
 
 type UserRepository struct {

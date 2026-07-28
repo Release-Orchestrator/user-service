@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/release-platform/user-service/internal/model"
-	"github.com/release-platform/user-service/internal/repository"
+	"github.com/Release-Orchestrator/user-service/internal/model"
+	"github.com/Release-Orchestrator/user-service/internal/repository"
 )
 
 var (

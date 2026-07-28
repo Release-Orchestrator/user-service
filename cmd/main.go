@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"embed"
 	"log"
 	"net/http"
 	"os"
@@ -17,10 +16,8 @@ import (
 	"github.com/Release-Orchestrator/user-service/internal/handler"
 	"github.com/Release-Orchestrator/user-service/internal/repository"
 	"github.com/Release-Orchestrator/user-service/internal/service"
+	"github.com/Release-Orchestrator/user-service/migrations"
 )
-
-//go:embed ../migrations/*.sql
-var migrationsFS embed.FS
 
 func main() {
 	cfg := config.Load()
@@ -81,7 +78,7 @@ func main() {
 }
 
 func runMigrations(db *pgxpool.Pool) error {
-	entries, err := migrationsFS.ReadDir("migrations")
+	entries, err := migrations.FS.ReadDir(".")
 	if err != nil {
 		return err
 	}
@@ -90,7 +87,10 @@ func runMigrations(db *pgxpool.Pool) error {
 		if entry.IsDir() {
 			continue
 		}
-		data, err := migrationsFS.ReadFile("migrations/" + entry.Name())
+		if len(entry.Name()) < 5 || entry.Name()[len(entry.Name())-4:] != ".sql" {
+			continue
+		}
+		data, err := migrations.FS.ReadFile(entry.Name())
 		if err != nil {
 			return err
 		}
