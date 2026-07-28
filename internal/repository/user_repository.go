@@ -10,6 +10,15 @@ import (
 	"github.com/Release-Orchestrator/user-service/internal/model"
 )
 
+type UserRepositoryInterface interface {
+	Create(ctx context.Context, user *model.User) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+	GetAll(ctx context.Context) ([]*model.User, error)
+	Update(ctx context.Context, user *model.User) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	ExistsByEmail(ctx context.Context, email string, excludeID *uuid.UUID) (bool, error)
+}
+
 type UserRepository struct {
 	db *pgxpool.Pool
 }

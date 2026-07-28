@@ -16,11 +16,19 @@ var (
 	ErrInvalidInput    = errors.New("invalid input")
 )
 
-type UserService struct {
-	repo *repository.UserRepository
+type UserServiceInterface interface {
+	Create(ctx context.Context, req *model.CreateUserRequest) (*model.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+	GetAll(ctx context.Context) ([]*model.User, error)
+	Update(ctx context.Context, id uuid.UUID, req *model.UpdateUserRequest) (*model.User, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
+type UserService struct {
+	repo repository.UserRepositoryInterface
+}
+
+func NewUserService(repo repository.UserRepositoryInterface) *UserService {
 	return &UserService{repo: repo}
 }
 
