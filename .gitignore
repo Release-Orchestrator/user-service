@@ -18,6 +18,9 @@ bin/
 *.swp
 *.swo
 
+# Root-level build output (non-Windows)
+/user-service
+
 # Env
 .env
 .env.local
