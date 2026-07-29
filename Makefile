@@ -1,4 +1,4 @@
-.PHONY: build test run docker-build tidy
+.PHONY: build test lint run docker-build tidy
 
 BINARY_NAME=user-service
 DOCKER_IMAGE=ghcr.io/release-orchestrator/user-service
@@ -9,6 +9,9 @@ build:
 
 test:
 	go test -v ./...
+
+lint:
+	golangci-lint run ./...
 
 run: build
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/user_db?sslmode=disable" ./bin/$(BINARY_NAME)
