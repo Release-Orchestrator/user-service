@@ -11,6 +11,12 @@ linters:
     - unused
     - revive
     - gosec
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
 
 formatters:
   enable:
@@ -19,8 +25,3 @@ formatters:
 
 issues:
   max-same-issues: 10
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
