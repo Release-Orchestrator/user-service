@@ -1,22 +1,26 @@
+// Package handler implements HTTP handlers for the user service.
 package handler
 
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/Release-Orchestrator/user-service/internal/model"
 	"github.com/Release-Orchestrator/user-service/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
+// UserHandler handles HTTP requests for users.
 type UserHandler struct {
 	svc service.UserServiceInterface
 }
 
+// NewUserHandler creates a new UserHandler.
 func NewUserHandler(svc service.UserServiceInterface) *UserHandler {
 	return &UserHandler{svc: svc}
 }
 
+// RegisterRoutes registers user-related routes on the given router group.
 func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	users := r.Group("/users")
 	{
@@ -28,6 +32,7 @@ func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
+// Create handles POST /api/v1/users.
 func (h *UserHandler) Create(c *gin.Context) {
 	var req model.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,6 +49,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"success": true, "data": user})
 }
 
+// Get handles GET /api/v1/users/:id.
 func (h *UserHandler) Get(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -60,6 +66,7 @@ func (h *UserHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": user})
 }
 
+// List handles GET /api/v1/users.
 func (h *UserHandler) List(c *gin.Context) {
 	users, err := h.svc.GetAll(c.Request.Context())
 	if err != nil {
@@ -70,6 +77,7 @@ func (h *UserHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": users})
 }
 
+// Update handles PUT /api/v1/users/:id.
 func (h *UserHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -92,6 +100,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": user})
 }
 
+// Delete handles DELETE /api/v1/users/:id.
 func (h *UserHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/Release-Orchestrator/user-service/internal/model"
 	"github.com/Release-Orchestrator/user-service/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type mockService struct {

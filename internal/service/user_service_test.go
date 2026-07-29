@@ -5,21 +5,21 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/Release-Orchestrator/user-service/internal/model"
 	"github.com/Release-Orchestrator/user-service/internal/repository"
+	"github.com/google/uuid"
 )
 
 type mockRepo struct {
 	repository.UserRepositoryInterface
 	users map[uuid.UUID]*model.User
 
-	createErr      error
-	getByIDErr     error
-	getAllErr      error
-	updateErr      error
-	deleteErr      error
-	existsByEmail  func(email string, excludeID *uuid.UUID) (bool, error)
+	createErr     error
+	getByIDErr    error
+	getAllErr     error
+	updateErr     error
+	deleteErr     error
+	existsByEmail func(email string, excludeID *uuid.UUID) (bool, error)
 }
 
 func newMockRepo() *mockRepo {
