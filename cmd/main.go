@@ -49,6 +49,8 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "UP"})
 	})
 
+	r.GET("/internal/users/:id", userHandler.Exists)
+
 	api := r.Group("/api/v1")
 	userHandler.RegisterRoutes(api)
 

@@ -19,7 +19,7 @@ A RESTful microservice for user management, part of the Release Orchestrator pla
 | GET | /api/v1/users/:id | Get user |
 | PUT | /api/v1/users/:id | Update user |
 | DELETE | /api/v1/users/:id | Delete user |
-| GET | /internal/users/:id | Validate user exists |
+| GET | /internal/users/:id | Validate user exists (returns `{"exists": bool}`) |
 
 ## Quick Start
 

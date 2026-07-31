@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Release-Orchestrator/user-service/internal/model"
@@ -114,6 +115,24 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// Exists handles GET /internal/users/:id and reports whether a user exists.
+// It is used by other services for cross-service validation.
+func (h *UserHandler) Exists(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"exists": false})
+		return
+	}
+
+	user, err := h.svc.GetByID(c.Request.Context(), id)
+	if err != nil && !errors.Is(err, service.ErrUserNotFound) {
+		h.handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"exists": user != nil})
 }
 
 func (h *UserHandler) handleError(c *gin.Context, err error) {

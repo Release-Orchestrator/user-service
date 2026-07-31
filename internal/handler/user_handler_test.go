@@ -50,6 +50,7 @@ func setupRouter(h *UserHandler) *gin.Engine {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "UP"})
 	})
+	r.GET("/internal/users/:id", h.Exists)
 	api := r.Group("/api/v1")
 	h.RegisterRoutes(api)
 	return r
@@ -368,5 +369,67 @@ func TestHandleError_InternalError(t *testing.T) {
 
 	if w.Code != http.StatusInternalServerError {
 		t.Fatalf("expected 500, got %d", w.Code)
+	}
+}
+
+func TestExists_Success(t *testing.T) {
+	userID := uuid.New()
+	svc := &mockService{
+		getByIDFunc: func(_ context.Context, id uuid.UUID) (*model.User, error) {
+			return &model.User{ID: id, Name: "John", Email: "john@test.com"}, nil
+		},
+	}
+	h := NewUserHandler(svc)
+	r := setupRouter(h)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/internal/users/"+userID.String(), nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var resp map[string]bool
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if !resp["exists"] {
+		t.Fatal("expected exists true")
+	}
+}
+
+func TestExists_NotFound(t *testing.T) {
+	svc := &mockService{
+		getByIDFunc: func(_ context.Context, _ uuid.UUID) (*model.User, error) {
+			return nil, service.ErrUserNotFound
+		},
+	}
+	h := NewUserHandler(svc)
+	r := setupRouter(h)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/internal/users/"+uuid.New().String(), nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var resp map[string]bool
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp["exists"] {
+		t.Fatal("expected exists false")
+	}
+}
+
+func TestExists_InvalidID(t *testing.T) {
+	h := NewUserHandler(&mockService{})
+	r := setupRouter(h)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/internal/users/bad-id", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
 	}
 }
